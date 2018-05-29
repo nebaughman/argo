@@ -33,12 +33,7 @@ class DebugHandler: MethodHandler {
     return if (id == null) {
       null
     } else {
-      RpcResponse(
-          RPC_VERSION_2_0,
-          RpcResult("ok"),
-          null, // TODO: proper rpc error handling
-          id // same as request
-      )
+      RpcResponse.success(id, "ok")
     }
   }
 }

@@ -4,23 +4,11 @@ data class RpcId(val id: Any)
 
 data class RpcMethod(val method: String)
 
-class RpcVersion(val version: String) {
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (javaClass != other?.javaClass) return false
+data class RpcVersion(val version: String)
 
-    other as RpcVersion
-
-    if (version != other.version) return false
-
-    return true
-  }
-
-  override fun hashCode(): Int {
-    return version.hashCode()
-  }
-}
-
+/**
+ * Constant for RpcVersion 2.0 (current expected version)
+ */
 val RPC_VERSION_2_0 = RpcVersion("2.0")
 
 interface RpcParams {
@@ -50,24 +38,23 @@ data class RpcRequest(
     val id: RpcId?
 )
 
-class RpcResult(val result: Any?)
-
-data class RpcErrorCode(val code: Int)
-data class RpcErrorMessage(val message: String)
-data class RpcErrorData(val data: Any)
-
 class RpcError(
-    val code: RpcErrorCode,
-    val message: RpcErrorMessage,
-    val data: RpcErrorData?
+    val code: Int,
+    val message: String,
+    val data: Any?
 )
 
 class RpcResponse(
-    val version: RpcVersion,
-    val result: RpcResult?,
-    val error: RpcError?,
-    val id: RpcId
-)
+    val version: RpcVersion = RPC_VERSION_2_0,
+    val id: RpcId,
+    val result: Any?,
+    val error: RpcError? = null
+) {
+  companion object {
+    fun success(id: RpcId, result: Any) = RpcResponse(id = id, result = result)
+    fun success(source: RpcRequest, result: Any) = success(source.id!!, result)
+  }
+}
 
 class RpcParseError(
     override val message: String,

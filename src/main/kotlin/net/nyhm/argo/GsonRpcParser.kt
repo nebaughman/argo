@@ -7,10 +7,12 @@ import java.lang.reflect.Type
  * A [Gson] implementation of an [RpcParser].
  *
  * Create a [GsonRpcParser] with a [Gson] paramsParser, which is responsible for
- * parsing any [RpcParams] types that may be requested by the user.
+ * deserializing any [RpcParams] types that may be requested by the user, as well as
+ * serializing any result and error objects in [RpcResponse] instances created by
+ * the user.
  *
  * If no custom parameters are expected (eg, only params handled natively by Gson),
- * then the default parameter can be used.
+ * then the default Gson object is sufficient.
  */
 class GsonRpcParser(paramsParser: Gson = Gson()): RpcParser<String>
 {
@@ -28,16 +30,16 @@ private class RpcResponseSerializer(
     val paramsParser: Gson
 ): JsonSerializer<RpcResponse> {
   override fun serialize(src: RpcResponse, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+    if (src.result != null && src.error != null) throw IllegalStateException("RpcResponse may not have result and error")
     val map = mutableMapOf(
         "jsonrpc" to RPC_VERSION_2_0.version,
         "id" to src.id.id
     )
     if (src.result != null) {
-      map["result"] = paramsParser.toJsonTree(src.result.result)
+      map["result"] = paramsParser.toJsonTree(src.result)
     }
-    // TODO: verify that exactly one result|error exists
     if (src.error != null) {
-      map["error"] = paramsParser.toJsonTree(src.error.message)
+      map["error"] = paramsParser.toJsonTree(src.error)
     }
     return paramsParser.toJsonTree(map)
   }
