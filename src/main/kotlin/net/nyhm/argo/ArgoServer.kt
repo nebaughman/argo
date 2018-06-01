@@ -24,13 +24,18 @@ class ArgoLogic(
   override fun processRequest(req: ClientRequest, res: ServerResponse) {
     val request = parser.parseRequest(req.body)
     val response = processor.handle(request)
-    if (response != null) res.respond(parser.export(response)) else res.respond("")
+    if (response == null && request.id != null) throw Exception("Request with id must return a response")
+    if (response != null) {
+      res.respond(parser.export(response))
+    } else {
+      // TODO: do not send any response body; just close response (gap in Bitty lib)
+      res.respond("")
+    }
   }
 }
 
 interface MethodHandler {
   fun handle(request: RpcRequest): RpcResponse?
-  // TODO: do not produce RpcResponse, produce Any payload (or throw for error)
 }
 
 class RpcProcessor

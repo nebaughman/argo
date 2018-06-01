@@ -9,6 +9,7 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.util.EntityUtils
 import org.junit.Test
 import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicInteger
 
 val log = LoggerFactory.getLogger("ArgoTestLogger")
 
@@ -21,7 +22,9 @@ class ArgoTest {
     ArgoServer(parser, port).use { server ->
       server.start()
       server.register("test", DebugHandler())
-      sendRequest()
+      sendRequest("test")
+      server.register("default", DefaultHandler())
+      sendRequest("default")
     }
   }
 }
@@ -38,11 +41,24 @@ class DebugHandler: MethodHandler {
   }
 }
 
-fun sendRequest() {
+class DefaultHandler: DefaultMethodHandler() {
+  override fun handleNotification(method: RpcMethod, params: RpcParams?) {
+    log.info("handleNotification method:{}, params:{}", method, params)
+  }
+
+  override fun handleRequest(method: RpcMethod, params: RpcParams?): Any? {
+    log.info("handleRequest method:{}, params:{}", method, params)
+    return "ok"
+  }
+}
+
+private val nextId = AtomicInteger()
+
+fun sendRequest(method: String) {
   val request = mapOf(
       "jsonrpc" to "2.0",
-      "id" to 1,
-      "method" to "test"
+      "id" to nextId.getAndIncrement(),
+      "method" to method
   )
   val json = Gson().toJson(request)
   log.info("Sending request: $json")
