@@ -1,7 +1,5 @@
 package net.nyhm.argo
 
-import org.slf4j.LoggerFactory
-
 /**
  * Utility implementation of a [MethodHandler] that interprets requests, requiring
  * a response to non-notification requests, and handling errors.
@@ -18,10 +16,6 @@ import org.slf4j.LoggerFactory
  */
 abstract class DefaultMethodHandler: MethodHandler
 {
-  companion object {
-    val log = LoggerFactory.getLogger(DefaultMethodHandler::class.java)
-  }
-
   override fun handle(request: RpcRequest): RpcResponse? {
     try {
       return if (request.id == null) {
@@ -37,7 +31,7 @@ abstract class DefaultMethodHandler: MethodHandler
         )
       }
     } catch (e: Exception) { // TODO: catch Throwable?
-      log.warn("Error processing notification", e)
+      this.log.warn("Error processing notification", e)
       // TODO: allow user to provide an exception handler callback? (for notification and non-notification requests)
       return if (request.id != null) {
         RpcResponse.error(id = request.id, error = RpcError.internalError())

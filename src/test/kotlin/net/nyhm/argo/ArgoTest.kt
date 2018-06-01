@@ -8,10 +8,7 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.util.EntityUtils
 import org.junit.Test
-import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
-
-val log = LoggerFactory.getLogger("ArgoTestLogger")
 
 const val port = 8888
 
@@ -31,7 +28,7 @@ class ArgoTest {
 
 class DebugHandler: MethodHandler {
   override fun handle(request: RpcRequest): RpcResponse? {
-    log.info("Handling request", request)
+    this.log.info("Handling request", request)
     val id = request.id
     return if (id == null) {
       null
@@ -43,11 +40,11 @@ class DebugHandler: MethodHandler {
 
 class DefaultHandler: DefaultMethodHandler() {
   override fun handleNotification(method: RpcMethod, params: RpcParams?) {
-    log.info("handleNotification method:{}, params:{}", method, params)
+    this.log.info("handleNotification method:{}, params:{}", method, params)
   }
 
   override fun handleRequest(method: RpcMethod, params: RpcParams?): Any? {
-    log.info("handleRequest method:{}, params:{}", method, params)
+    this.log.info("handleRequest method:{}, params:{}", method, params)
     return "ok"
   }
 }
