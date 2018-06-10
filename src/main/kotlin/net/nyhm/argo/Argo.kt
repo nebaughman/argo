@@ -1,7 +1,16 @@
 package net.nyhm.argo
 
 /**
- * Utility implementation of a [MethodHandler] that interprets requests, requiring
+ * Implementations handle [RpcRequest] objects. An [RpcResponse] must be produced for
+ * non-notification requests. Notification requests must return null.
+ */
+interface RpcHandler
+{
+  fun handle(request: RpcRequest): RpcResponse?
+}
+
+/**
+ * Utility implementation of a [RpcHandler] that interprets requests, requiring
  * a response to non-notification requests, and handling errors.
  *
  * Instead of directly interacting with the request, implementations interact
@@ -14,7 +23,7 @@ package net.nyhm.argo
  * receive a JSON-RPC "Internal error" response. The contents of the exception are *not*
  * included in the [RpcResponse] (to avoid inadvertently exposing internal state to clients).
  */
-abstract class DefaultMethodHandler: MethodHandler
+abstract class DefaultHandler: RpcHandler
 {
   override fun handle(request: RpcRequest): RpcResponse? {
     try {
@@ -57,4 +66,21 @@ abstract class DefaultMethodHandler: MethodHandler
    * error types and messages.
    */
   abstract fun handleRequest(method: RpcMethod, params: RpcParams?): Any?
+}
+
+/**
+ * Helper class to bind [RpcHandler] instances to [RpcMethod] endpoints.
+ */
+class SimpleRpcRouter: RpcHandler
+{
+  companion object {
+    fun create() = SimpleRpcRouter()
+  }
+
+  private val handlers = mutableMapOf<RpcMethod,RpcHandler>()
+
+  fun register(method: RpcMethod, handler: RpcHandler) = apply { handlers.put(method, handler) }
+
+  override fun handle(request: RpcRequest): RpcResponse? = handlers[request.method]?.handle(request)
+      ?: throw JsonRpcException("No such method: ${request.method}") // TODO: proper rpc error response
 }

@@ -2,7 +2,10 @@ package net.nyhm.argo
 
 data class RpcId(val id: Any)
 
-data class RpcMethod(val method: String) // TODO: Remove? (little value over String, beyond type safety)
+// TODO: Instead of simple string matching, allow regex (or define simple wildcard syntax);
+// This could just be a string; matching/routing logic can be handled by an RpcHandler
+//
+data class RpcMethod(val method: String)
 
 data class RpcVersion(val version: String)
 
@@ -21,13 +24,13 @@ interface RpcParams {
   /**
    * Only for positional params
    */
-  @Throws(RpcParseError::class)
+  @Throws(JsonRpcException::class)
   fun <T> get(index: Int, type: Class<T>): T?
 
   /**
    * Only for non-positional params
    */
-  @Throws(RpcParseError::class)
+  @Throws(JsonRpcException::class)
   fun <T> get(name: String, type: Class<T>): T?
 }
 
@@ -65,7 +68,7 @@ class RpcError(
      * inclusive range: -32099 to -32000
      */
     fun serverError(code: Int, data: Any? = null): RpcError {
-      if (code !in -32099..-32000) throw IllegalArgumentException("Invalid serverError code (outside -32099..-32000): $code")
+      if (code !in -32099..-32000) throw JsonRpcException("Invalid serverError code (outside -32099..-32000): $code")
       return RpcError(code, "Server error", data)
     }
   }
@@ -84,16 +87,16 @@ class RpcResponse(
   }
 }
 
-class RpcParseError(
+class JsonRpcException(
     override val message: String,
     override val cause: Throwable? = null,
     val json: Any? = null
 ): Exception(message, cause)
 
 interface RpcParser<T> {
-  @Throws(RpcParseError::class)
+  @Throws(JsonRpcException::class)
   fun parseRequest(json: T): RpcRequest
 
-  @Throws(RpcParseError::class)
+  @Throws(JsonRpcException::class)
   fun export(response: RpcResponse): T
 }

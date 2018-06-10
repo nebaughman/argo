@@ -12,21 +12,27 @@ import java.util.concurrent.atomic.AtomicInteger
 
 const val port = 8888
 
+/**
+ * This is not much of a unit test, because nothing is asserted, but serves to
+ * demonstrate starting an Argo service and handling some requests.
+ */
 class ArgoTest {
   @Test
   fun testArgo() {
     val parser = GsonRpcParser()
-    ArgoServer(parser, port).use { server ->
+    val processor = SimpleRpcRouter.create()
+        .register(RpcMethod("test"), DebugHandler())
+        .register(RpcMethod("other"), OtherHandler())
+
+    ArgoBittyService(processor, parser, port).use { server ->
       server.start()
-      server.register("test", DebugHandler())
       sendRequest("test")
-      server.register("default", DefaultHandler())
-      sendRequest("default")
+      sendRequest("other")
     }
   }
 }
 
-class DebugHandler: MethodHandler {
+class DebugHandler: RpcHandler {
   override fun handle(request: RpcRequest): RpcResponse? {
     this.log.info("Handling request", request)
     val id = request.id
@@ -38,7 +44,7 @@ class DebugHandler: MethodHandler {
   }
 }
 
-class DefaultHandler: DefaultMethodHandler() {
+class OtherHandler: DefaultHandler() {
   override fun handleNotification(method: RpcMethod, params: RpcParams?) {
     this.log.info("handleNotification method:{}, params:{}", method, params)
   }

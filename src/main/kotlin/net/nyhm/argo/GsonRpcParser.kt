@@ -28,9 +28,10 @@ class GsonRpcParser(paramsParser: Gson = Gson()): RpcParser<String>
 
 private class RpcResponseSerializer(
     val paramsParser: Gson
-): JsonSerializer<RpcResponse> {
+): JsonSerializer<RpcResponse>
+{
   override fun serialize(src: RpcResponse, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-    if (src.result != null && src.error != null) throw IllegalStateException("RpcResponse may not have result and error")
+    if (src.result != null && src.error != null) throw JsonRpcException("RpcResponse may not have result and error")
     val map = mutableMapOf(
         "jsonrpc" to RPC_VERSION_2_0.version,
         "id" to src.id.id
@@ -53,10 +54,10 @@ private class RpcRequestDeserializer(
 ): JsonDeserializer<RpcRequest>
 {
   override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): RpcRequest {
-    if (!json.isJsonObject) throw RpcParseError("Request is not json object", json = json)
+    if (!json.isJsonObject) throw JsonRpcException("Request is not json object", json = json)
     val req = json.asJsonObject
     val version = RpcVersion(req.getAsJsonPrimitive("jsonrpc").asString)
-    if (version != RPC_VERSION_2_0) throw RpcParseError("Unexpected version", json = json)
+    if (version != RPC_VERSION_2_0) throw JsonRpcException("Unexpected version", json = json)
     val method = RpcMethod(req.getAsJsonPrimitive("method").asString)
     val paramsJson = req.get("params")
     val params = if (paramsJson == null || paramsJson.isJsonNull) {
@@ -64,7 +65,7 @@ private class RpcRequestDeserializer(
     } else if (paramsJson.isJsonArray || paramsJson.isJsonObject) {
       GsonParams(paramsParser, paramsJson)
     } else {
-      throw RpcParseError("Invalid json params")
+      throw JsonRpcException("Invalid json params")
     }
     val idJson = req.get("id")
     val id = if (idJson == null || idJson.isJsonNull) {
@@ -77,7 +78,7 @@ private class RpcRequestDeserializer(
 }
 
 /**
- * This class can parse Json-Rpc request params with a user-specified parser.
+ * This class can parse JSON-RPC request params with a user-specified parser.
  */
 private class GsonParams(
     private val parser: Gson,
@@ -87,12 +88,12 @@ private class GsonParams(
   override fun isPositional() = data.isJsonArray
 
   override fun <T> get(index: Int, type: Class<T>): T? {
-    if (!isPositional()) throw RpcParseError("Cannot request positional params of named params")
+    if (!isPositional()) throw JsonRpcException("Cannot request positional params of named params")
     return parse(data.asJsonArray[index], type)
   }
 
   override fun <T> get(name: String, type: Class<T>): T? {
-    if (isPositional()) throw RpcParseError("Cannot request named params of positional params")
+    if (isPositional()) throw JsonRpcException("Cannot request named params of positional params")
     return parse(data.asJsonObject.get(name), type)
   }
 
