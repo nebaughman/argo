@@ -16,6 +16,8 @@ See the [JSON-RPC Specification](http://www.jsonrpc.org/specification).
 
 See the test package for usage samples.
 
-## Future
+## Caveats
+
+> This is very much a work-in-progress development release!
 
 Things are likely to change. The Argo framework layer needs work (more flexible routing, for instance). 
