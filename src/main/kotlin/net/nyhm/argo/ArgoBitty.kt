@@ -16,7 +16,7 @@ class ArgoBittyService(
 ): AutoCloseable
 {
   private val logic = ArgoBittyLogic(parser, handler)
-  private val service = BittyService(HttpServer(logic, port, 1, 1))
+  private val service = HttpService(HttpServer(logic, port, 1, 1))
 
   fun start() = service.start()
   fun stop() = service.stop()

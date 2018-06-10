@@ -6,7 +6,9 @@ import java.util.*
 import java.util.concurrent.Executors
 
 /**
- * A simple driver to test the bitty (http server) dependency
+ * A simple driver to test the bitty (http server) dependency.
+ * This isn't a very good unit test, because it doesn't actually test anything.
+ * To use this, run the test, then visit the service on http://localhost:8888
  */
 class BittyTest {
 
